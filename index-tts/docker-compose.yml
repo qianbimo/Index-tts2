@@ -1,0 +1,39 @@
+services:
+  indextts2:
+    container_name: indextts2
+    image: indextts2-gpu
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    ports:
+      - "7860:7860"
+    volumes:
+      - /home/data/zhwang/index-tts/index-tts/output:/app/output
+      - /home/data/zhwang/index-tts/index-tts/checkpoints:/app/checkpoints
+      - /home/data/zhwang/index-tts/.cache/huggingface:/root/.cache/huggingface
+      - /home/data/zhwang/index-tts/.cache/uv:/root/.cache/uv
+      - ./entrypoint.sh:/app/entrypoint.sh
+    environment:
+      - HF_ENDPOINT=https://hf-mirror.com
+      - PATH=/root/.local/bin:${PATH}
+      - NVIDIA_VISIBLE_DEVICES=2  # 明确指定只使用 GPU 2
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['2']
+            capabilities: [gpu]
+    command: ["uv", "run", "webui.py"]
+    restart: unless-stopped
+    networks:
+      tts_net:
+        ipv4_address: 172.40.0.10
+
+networks:
+  tts_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.40.0.0/16
