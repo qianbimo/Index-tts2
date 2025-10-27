@@ -1,58 +1,65 @@
-# ================================
-# Dockerfile for IndexTTS-2-vLLM
-# CUDA 12.4 + Ubuntu 22.04 + uv + 清华镜像
-# ================================
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+# ===============================
+# Dockerfile for IndexTTS-2 (CUDA 12.4 + uv + 清华源)
+# ===============================
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
 
-# ---------------------
-# 基础环境设置
-# ---------------------
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
-ENV LANG=C.UTF-8
-ENV PATH="/root/.local/bin:$PATH"
+# 基本环境配置
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    UV_SYSTEM_PYTHON=1 \
+    UV_LINK_MODE=copy \
+    PATH="/root/.local/bin:$PATH"
+
+# -------------------------------
+# 1. 配置 APT 清华源
+# -------------------------------
+RUN sed -i 's@archive.ubuntu.com@mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list && \
+    sed -i 's@security.ubuntu.com@mirrors.tuna.tsinghua.edu.cn@g' /etc/apt/sources.list
+
+# 安装系统依赖与 Python3
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip python3.10-dev \
+    build-essential git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# -------------------------------
+# 2. 配置 pip 清华源
+# -------------------------------
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 安装 uv（代替 conda）
+RUN pip install --no-cache-dir uv -i https://pypi.org/simple
+
+# 设置工作目录
 WORKDIR /app
 
-# ---------------------
-# 安装系统依赖
-# ---------------------
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git git-lfs python3 python3-pip ffmpeg libsndfile1 curl wget ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# ---------------------
-# 复制项目文件
-# ---------------------
+# 复制项目代码
 COPY . /app
 
-# ---------------------
-# 安装 uv 包管理器
-# ---------------------
-RUN pip install --upgrade pip && pip install uv
+# -------------------------------
+# 3. 使用 PyTorch 官方 CUDA 12.4 源安装 PyTorch 2.8.0
+# -------------------------------
+RUN uv pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+# -------------------------------
+# 4. 安装项目依赖
+# -------------------------------
+RUN cd /app && uv pip install -r requirements.txt
 
-# ---------------------
-# 使用 uv 安装 Python 项目依赖（清华镜像）
-# 注意：加上 --system 避免虚拟环境报错
-# ---------------------
-RUN uv pip install --system --upgrade pip -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple && \
-    uv pip install --system -r requirements.txt -i https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+# -------------------------------
+# 5. 安装 modelscope（支持模型下载）
+# -------------------------------
+RUN uv pip install modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# ---------------------
-# 安装 HuggingFace CLI（用于下载模型）
-# ---------------------
-RUN uv tool install "huggingface-hub[cli,hf_xet]"
+# -------------------------------
+# 6. 预下载 IndexTTS-2 模型权重
+# -------------------------------
+RUN mkdir -p checkpoints && \
+    modelscope download --model kusuriuri/IndexTTS-2-vLLM --local_dir ./checkpoints/IndexTTS-2-vLLM || true
 
-# ---------------------
-# 确保 entrypoint 可执行
-# ---------------------
+# -------------------------------
+# 7. 设置执行权限与暴露端口
+# -------------------------------
 RUN chmod +x /app/entrypoint.sh
 
-# ---------------------
-# 暴露端口
-# ---------------------
 EXPOSE 7861
 
-# ---------------------
-# 默认启动命令
-# ---------------------
 ENTRYPOINT ["/app/entrypoint.sh"]

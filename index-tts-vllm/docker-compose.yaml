@@ -2,23 +2,16 @@ version: '3.9'
 
 services:
   indextts2:
-    build: .
-    image: indextts2-vllm
     container_name: indextts2-vllm
-    runtime: nvidia
-    environment:
-      MODEL_DIR: /app/checkpoints
-      MODEL: IndexTeam/IndexTTS-2-vLLM     # 默认加载 IndexTTS-2 模型
-      VLLM_USE_MODELSCOPE: 0               # 1=使用 ModelScope；0=使用 HuggingFace
-      DOWNLOAD_MODEL: 1                    # 自动下载
-      CONVERT_MODEL: 1                     # 自动转换权重
-      GPU_MEMORY_UTILIZATION: 0.25         # GPU 显存占用比例
-      PORT: 7861                           # API 端口
+    image: indextts2-vllm-gpu
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
     ports:
-      - "7861:7861"
+      - "7861:7861"         # Web UI 端口
     volumes:
-      - ./checkpoints:/app/checkpoints     # 模型目录挂载
-      - ./assets:/app/assets               # 资源文件
+      - ./output:/app/output   # 输出结果挂载
     deploy:
       resources:
         reservations:
@@ -26,12 +19,12 @@ services:
           - driver: nvidia
             device_ids: ['2']
             capabilities: [gpu]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7861/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    command: ["/app/entrypoint.sh"]
     networks:
       tts_net:
         ipv4_address: 172.50.0.10

@@ -45,7 +45,7 @@ RUN uv tool install "huggingface-hub[cli,hf_xet]"
 # ---------------------
 EXPOSE 7860
 
-# ---------------------
+# --------------------- 
 # 默认启动命令（运行 Gradio Web 界面）
 # ---------------------
 ENTRYPOINT ["/app/entrypoint.sh"]
