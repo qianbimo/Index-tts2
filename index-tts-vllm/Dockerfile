@@ -33,7 +33,15 @@ RUN pip install --no-cache-dir uv -i https://pypi.org/simple
 WORKDIR /app
 
 # 复制项目代码
-COPY . /app
+COPY assets /app/assets
+COPY indextts /app/indextts
+COPY tools /app/tools
+COPY patch_vllm.py /app/patch_vllm.py
+COPY api_server_v2.py /app/api_server_v2.py
+COPY convert_hf_format.py /app/convert_hf_format.py
+COPY convert_hf_format.sh /app/convert_hf_format.sh
+COPY entrypoint.sh /app/entrypoint.sh
+COPY requirements.txt /app/requirements.txt
 
 # -------------------------------
 # 3. 使用 PyTorch 官方 CUDA 12.4 源安装 PyTorch 2.8.0

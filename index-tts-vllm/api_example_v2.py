@@ -3,7 +3,7 @@ import os
 from typing import List, Optional
 import requests
 
-SERVER_PORT = 6006
+SERVER_PORT = 7861
 output_dir = "outputs"
 os.makedirs(output_dir, exist_ok=True)
 
