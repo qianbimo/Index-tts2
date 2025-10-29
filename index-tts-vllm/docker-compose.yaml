@@ -1,17 +1,14 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  indextts2:
-    container_name: indextts2-vllm
-    image: indextts2-vllm-gpu
-    build:
-      context: .
-      dockerfile: Dockerfile
-    working_dir: /app
+  index-tts:
+    build: .
+    image: index-tts-server
+    env_file:
+      - .env.example
+    container_name: index-tts-server
     ports:
-      - "7861:7861"         # Web UI 端口
-    volumes:
-      - ./output:/app/output   # 输出结果挂载
+      - "${PORT:-7861}:${PORT:-7861}"
     deploy:
       resources:
         reservations:
@@ -19,12 +16,20 @@ services:
           - driver: nvidia
             device_ids: ['2']
             capabilities: [gpu]
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - CUDA_VISIBLE_DEVICES=0
-      - PYTHONUNBUFFERED=1
+    volumes:
+    #   - ./audio_prompts:/app/audio_prompts
+      - ./assets:/app/assets
+      - ./output:/app/output   # 输出结果挂载
+      # 挂载单个文件
+      # - ./api_server_v2.py:/app/api_server_v2.py
+      - ./api_server.py:/app/api_server.py
+      - ./entrypoint.sh:/app/entrypoint.sh
     restart: unless-stopped
-    command: ["/app/entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-7861}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       tts_net:
         ipv4_address: 172.50.0.10

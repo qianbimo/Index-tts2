@@ -197,7 +197,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=6006)
-    parser.add_argument("--model_dir", type=str, default="/path/to/IndexTeam/Index-TTS")
+    parser.add_argument("--model_dir", type=str, default="/path/to/IndexTeam/Index-TTS-1.5-vLLM")
     parser.add_argument("--gpu_memory_utilization", type=float, default=0.25)
     args = parser.parse_args()
 
