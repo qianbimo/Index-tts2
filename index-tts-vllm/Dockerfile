@@ -76,6 +76,6 @@ RUN mkdir -p checkpoints && \
 # -------------------------------
 RUN chmod +x /app/entrypoint.sh /app/convert_hf_format.sh
 
-EXPOSE 7861
+EXPOSE 7800
 
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -13,6 +13,6 @@ if [ ! -d "./checkpoints/IndexTTS-2-vLLM" ]; then
 fi
 
 # 启动 WebUI
-echo "🔥 启动 webui_v2.py ..."
+echo "🔥 启动 api_server_v2.py ..."
 # python3 webui_v2.py --model_dir ./checkpoints/IndexTTS-2-vLLM --host 0.0.0.0 --port 7861
-python3 api_server_v2.py --model_dir ./checkpoints/IndexTTS-2-vLLM --host 0.0.0.0 --port 7861 --gpu_memory_utilization=0.25   
+python3 api_server_v2.py --model_dir ./checkpoints/IndexTTS-2-vLLM --host 0.0.0.0 --port 7800 --gpu_memory_utilization=0.25   

@@ -8,7 +8,7 @@ services:
       - .env.example
     container_name: index-tts-server
     ports:
-      - "${PORT:-7861}:${PORT:-7861}"
+      - "${PORT:-7800}:${PORT:-7800}"
     deploy:
       resources:
         reservations:
@@ -26,7 +26,7 @@ services:
       - ./entrypoint.sh:/app/entrypoint.sh
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-7861}/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-7800}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
